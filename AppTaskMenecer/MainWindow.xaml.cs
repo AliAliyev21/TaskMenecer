@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using TaskManagerApp;
 
@@ -22,6 +23,40 @@ namespace TaskManagerApp
             InitializeTimer();
         }
 
+        private async void createBtn_Click(object sender, RoutedEventArgs e)
+        {
+            string processName = createTxt.Text.Trim();
+            if (!string.IsNullOrEmpty(processName))
+            {
+                blackBox2.Items.Add(processName);
+                StartProcess(processName); 
+
+            
+                await Task.Delay(3000);
+
+         
+                var process = Process.GetProcessesByName(processName).FirstOrDefault();
+                if (process != null && !process.HasExited)
+                {
+                    try
+                    {
+                        process.Kill();
+                        MessageBox.Show($"Process '{processName}' ended successfully after 3 seconds.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                        RefreshProcessList();
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Failed to end process '{processName}': {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                }
+            }
+            else
+            {
+                MessageBox.Show("Please enter a valid process name.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+
         private void InitializeCPUCounter()
         {
             cpuCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
@@ -39,6 +74,31 @@ namespace TaskManagerApp
         {
             double cpuUsage = cpuCounter.NextValue();
             CPUProgressBar.Value = cpuUsage;
+        }
+
+        private void blackBox3_Click(object sender, RoutedEventArgs e)
+        {
+            string processName = blackBox1.Text.Trim();
+            if (!string.IsNullOrEmpty(processName))
+            {
+                blackBox2.Items.Add(processName);
+            }
+            else
+            {
+                MessageBox.Show("Please enter a valid process name.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void StartProcess(string processName)
+        {
+            try
+            {
+                Process.Start(processName);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to start process '{processName}': {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void EndProcessButton_Click(object sender, RoutedEventArgs e)
